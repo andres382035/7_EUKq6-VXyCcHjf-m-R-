@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Corporativo - Gestión de Personal v11.5</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Chakra+Petch:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* TEMA DARK (Por defecto con AZUL) */
+            --bg-body: #0f1215;
+            --bg-panel: #161b22;
+            --bg-card: #1f242d;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --primary: #2f81f7; /* Azul Brillante */
+            --primary-dark: #0056b3;
+            --border: #30363d;
+            --modal-overlay: rgba(0, 0, 0, 0.85);
+            --font-main: 'Roboto', sans-serif;
+            --font-tech: 'Chakra Petch', sans-serif;
+        }
+
+        [data-theme="light"] {
+            /* TEMA LIGHT */
+            --bg-body: #f6f8fa;
+            --bg-panel: #ffffff;
+            --bg-card: #ffffff;
+            --text-main: #24292f;
+            --text-muted: #57606a;
+            --primary: #0969da;
+            --primary-dark: #004494;
+            --border: #d0d7de;
+            --modal-overlay: rgba(255, 255, 255, 0.9);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { background: var(--bg-body); color: var(--text-main); font-family: var(--font-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; transition: 0.3s; }
+
+        /* LOGIN */
+        #security-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-body); z-index: 99999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .login-box {
+            border-top: 5px solid var(--primary);
+            padding: 50px; background: var(--bg-panel); border-radius: 8px;
+            text-align: center; box-shadow: 0 10px 50px rgba(0,0,0,0.2);
+            width: 90%; max-width: 400px; border: 1px solid var(--border);
+        }
+
+        .auth-input {
+            background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);
+            padding: 12px; font-family: var(--font-tech); font-size: 1.2rem;
+            width: 100%; margin: 20px 0; text-align: center; letter-spacing: 5px; border-radius: 6px;
+        }
+
+        .auth-btn {
+            background: var(--primary); color: #fff; border: none; padding: 12px;
+            font-weight: bold; cursor: pointer; width: 100%; border-radius: 6px;
+            font-family: var(--font-main); text-transform: uppercase; transition: 0.3s;
+        }
+        .auth-btn:hover { background: var(--primary-dark); }
+
+        /* MAIN */
+        #main-interface { display: none; flex-direction: column; min-height: 100vh; }
+
+        header { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .logo i { color: var(--primary); font-size: 1.5rem; }
+
+        .theme-btn {
+            background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+            padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; display: flex; gap: 5px; align-items: center;
+        }
+        .theme-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* SEARCH */
+        .search-container { 
+            background: var(--bg-panel); padding: 20px; border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100; display: flex; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .input-wrapper { position: relative; width: 100%; max-width: 800px; }
+        #searchInput { 
+            width: 100%; padding: 12px 40px 12px 15px; 
+            background: var(--bg-body); border: 1px solid var(--border); 
+            color: var(--text-main); font-family: var(--font-main); font-size: 1rem; 
+            border-radius: 6px;
+        }
+        #searchInput:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3); }
+        .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        /* GRID */
+        .grid { padding: 30px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); max-width: 1400px; margin: 0 auto; width: 100%; }
+
+        .card { 
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; 
+            overflow: hidden; transition: 0.2s; display: flex; flex-direction: column;
+        }
+        .card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        .card-header { 
+            background: rgba(127, 127, 127, 0.05); padding: 8px 15px; 
+            font-size: 0.75rem; color: var(--text-muted); font-weight: bold; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between;
+        }
+
+        .card-body { padding: 20px; display: flex; align-items: center; gap: 15px; }
+        .card-img { 
+            width: 70px; height: 70px; border-radius: 50%; object-fit: cover; 
+            border: 2px solid var(--border); background: #eee;
+        }
+        .card-info { flex: 1; }
+        .card-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; color: var(--text-main); }
+        .card-role { font-size: 0.8rem; color: var(--primary); margin-bottom: 4px; font-weight: 500; }
+        .card-dni { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-tech); }
+
+        .card-footer { padding: 10px 15px; border-top: 1px solid var(--border); text-align: right; background: rgba(127, 127, 127, 0.02); }
+        .view-btn { 
+            background: transparent; border: 1px solid var(--border); color: var(--text-muted); 
+            padding: 5px 12px; font-size: 0.75rem; cursor: pointer; border-radius: 4px; font-weight: bold;
+        }
+        .view-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: var(--modal-overlay); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
+        .modal-content { 
+            position: relative; width: 95%; max-width: 900px; height: 85vh; 
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; 
+            display: flex; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .modal-left { 
+            width: 35%; background: #000; display: flex; align-items: center; justify-content: center; 
+            border-right: 1px solid var(--border); padding: 20px; 
+        }
+        .modal-left img { width: 100%; height: auto; max-height: 100%; object-fit: contain; border-radius: 4px; border: 1px solid #333; }
+        
+        .modal-right { width: 65%; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; }
+        
+        .modal-header-text { margin-bottom: 20px; }
+        .modal-header-text h2 { font-size: 1.5rem; color: var(--text-main); margin-bottom: 5px; }
+        .modal-header-text p { color: var(--primary); font-weight: bold; font-size: 0.9rem; }
+
+        /* GRID DE DATOS (2 COLUMNAS) */
+        .detail-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* 2 Columnas */
+            gap: 15px 30px; 
+            margin-bottom: 30px; 
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+        
+        .detail-item { display: flex; flex-direction: column; }
+        .lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: bold; letter-spacing: 0.5px; margin-bottom: 3px; font-family: var(--font-tech); text-transform: uppercase; }
+        .val { font-size: 0.95rem; color: var(--text-main); border-bottom: 1px dashed var(--border); padding-bottom: 2px; min-height: 1.2em; }
+
+        .close-btn { position: absolute; top: 15px; right: 20px; color: var(--text-muted); font-size: 2rem; cursor: pointer; z-index: 10; }
+        .close-btn:hover { color: var(--primary); }
+
+        .social-section { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+        .social-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .social-btn { 
+            flex: 1; padding: 8px; text-align: center; border: 1px solid var(--border); 
+            border-radius: 4px; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; 
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+        }
+        .social-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(47, 129, 247, 0.05); }
+
+        .no-res { grid-column: 1/-1; text-align: center; padding: 60px; opacity: 0.5; color: var(--text-muted); }
+
+        @media (max-width: 768px) {
+            .modal-content { flex-direction: column; height: 95vh; }
+            .modal-left { width: 100%; height: 200px; padding: 10px; }
+            .modal-left img { height: 100%; width: auto; }
+            .modal-right { width: 100%; padding: 20px; }
+            .detail-grid { grid-template-columns: 1fr; gap: 10px; } 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="security-layer">
+        <div class="login-box">
+            <i class="fas fa-user-shield" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
+            <h2 style="color: var(--text-main); margin-bottom: 5px;">PORTAL CORPORATIVO</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Recursos Humanos - Logística</p>
+            
+            <input type="password" id="passInput" class="auth-input" placeholder="********" autofocus>
+            <button class="auth-btn" onclick="checkAuth()">ACCEDER</button>
+            <p id="authError" style="display:none; color: #ff3333; margin-top: 15px; font-size: 0.9rem;">Clave incorrecta</p>
+        </div>
+    </div>
+
+    <div id="main-interface">
+        <header>
+            <div class="logo"><i class="fas fa-building"></i> RRHH <span>LOGÍSTICA</span></div>
+            <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i> TEMA</button>
+        </header>
+
+        <div class="search-container">
+            <div class="input-wrapper">
+                <input type="text" id="searchInput" placeholder="Buscar por DNI, Apellidos o Cargo..." onkeyup="handleSearch()" autocomplete="off">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+
+        <div id="grid" class="grid">
+            <div class="no-res">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <p>Ingrese al menos 2 caracteres para buscar...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div class="modal-left">
+                <img id="mImg" src="imagenes/persona.jpg" onerror="this.src='imagenes/persona.jpg'">
+            </div>
+            <div class="modal-right">
+                <div class="modal-header-text">
+                    <h2 id="mName">NOMBRE COMPLETO</h2>
+                    <p id="mRole">CARGO</p>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="lbl">DNI</span>
+                        <span id="mDni" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">APELLIDOS</span>
+                        <span id="mApe" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">NOMBRES</span>
+                        <span id="mNom" class="val"></span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="lbl">FECHA NAC.</span>
+                        <span id="mFecNac" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">UBIGEO NAC.</span>
+                        <span id="mUbiNac" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">UBIGEO DIR.</span>
+                        <span id="mUbiDir" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">DIRECCIÓN</span>
+                        <span id="mDir" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">SEXO</span>
+                        <span id="mSex" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">EST. CIVIL</span>
+                        <span id="mEstCiv" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">DIG. RUC</span>
+                        <span id="mRuc" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">PADRE</span>
+                        <span id="mPadre" class="val"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="lbl">MADRE</span>
+                        <span id="mMadre" class="val"></span>
+                    </div>
+                    
+                    <div class="detail-item" style="grid-column: 1 / -1; border-top: 1px solid var(--primary); margin-top: 10px; padding-top: 5px;">
+                        <span class="lbl" style="color:var(--primary)">TELÉFONOS / CONTACTO</span>
+                        <span id="mTelf" class="val"></span>
+                    </div>
+                    
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <span class="lbl">OBSERVACIONES</span>
+                        <span id="mObs" class="val"></span>
+                    </div>
+                </div>
+
+                <div class="social-section">
+                    <div class="lbl" style="margin-bottom: 10px;">ENLACES EXTERNOS (REDES)</div>
+                    <div class="social-links" id="modalSocialLinks">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. SEGURIDAD (Hash de "321")
+        const SECURE_HASH = "14c605938a3e7cd57e901c2273b0121c07aa64d186eae3f64bc5406d42fe9d03";
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkAuth() {
+            const input = document.getElementById('passInput').value;
+            const hash = await sha256(input);
+            if (hash === SECURE_HASH) {
+                document.getElementById('security-layer').style.display = 'none';
+                document.getElementById('main-interface').style.display = 'flex';
+                document.getElementById('searchInput').focus();
+            } else {
+                document.getElementById('authError').style.display = 'block';
+                document.getElementById('passInput').value = '';
+            }
+        }
+
+        document.getElementById('passInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkAuth(); });
+
+        function toggleTheme() {
+            const body = document.body;
+            if (body.hasAttribute('data-theme')) body.removeAttribute('data-theme');
+            else body.setAttribute('data-theme', 'light');
+        }
+
+        // 2. BASE DE DATOS ACTUALIZADA
+        const db = [
+            { dni: "73882751", ape: "ZAPATA SOLANO", nom: "Santiago Luis", cargo: "Vocero Generación Z / Jóvenes Líderes", telf: "", obs: "Alias: YACKOV SOLANO" },
+            { dni: "", ape: "VALERIANO NAPAN", nom: "Martín", cargo: "Presidente ANITRA", telf: "" },
+            { dni: "08676788", ape: "CAMPOS CARDENAS", nom: "Julio Pompeyo", cargo: "Rep. Comité Gremio Transportistas", telf: "" },
+            { 
+                dni: "08123159", 
+                ape: "OJEDA TRUJILLO", 
+                nom: "MARTIN GUILLERMO", 
+                cargo: "Dir. Cámara Int. Industria Transporte", 
+                fecha_nac: "08/11/1967",
+                ubigeo_dir: "LIMA-LIMA-LA VICTORIA",
+                direccion: "CALLE LAS AGATAS XXX ALTOS",
+                sexo: "MASCULINO",
+                est_civil: "SOLTERO",
+                madre: "CARMEN",
+                padre: "GUILLERMO",
+                telf: "987654***, 987654***, 987654***", 
+				obs: "Usuario con redes sociales activas.",
+				links: [
+                    "https://www.facebook.com/usuario_ejemplo",
+                    "https://www.instagram.com/usuario_ejemplo",
+                    "https://www.tiktok.com/@usuario_ejemplo",
+					"https://www.x.com/@usuario_ejemplo",
+					"https://www.martinojeda.com/",
+					"https://www.martinojeda.com/"
+                ] 
+            },
+            
+            { dni: "", ape: "CARRERA ALVAREZ", nom: "Walter", cargo: "Vicepresidente ASOTRANI", telf: "" },
+            { dni: "", ape: "PALOMINO PEDRAZA", nom: "Miguel Ángel", cargo: "Presidente ANCPP", telf: "" },
+            { dni: "", ape: "VARGAS EGAS", nom: "Héctor", cargo: "Coord. Empresas Transporte Urbano Lima/Callao", telf: "" },
+            { dni: "", ape: "BARBACHAN RUALES", nom: "Marco Antonio", cargo: "Dirigente de Chosica", telf: "" },
+            { dni: "", ape: "MENDOZA CARRUZO", nom: "Jorge Antonio", cargo: "Rep. Lima Norte / Integrante CONALREP", telf: "" },
+            { dni: "", ape: "PILLACA RODRÍGUEZ", nom: "Alejandro Gerónimo", cargo: "Integrante CONALREP (Alias: Frank Pillaca)", telf: "" },
+            { dni: "", ape: "YABAR GONZALES", nom: "Pável", cargo: "Reportero Prensa Alternativa (Alias: Yachay Wasy)", telf: "" },
+            { dni: "", ape: "VILCA SALCEDO", nom: "Antonio", cargo: "Coordinador Patriótico Social", telf: "" },
+            { dni: "", ape: "SILVA PAREDES", nom: "Ciro", cargo: "Activista Generación Z", telf: "" },
+            { dni: "", ape: "QUISPE TICONA", nom: "Andrés", cargo: "Coord. Movilización Colectivo 21 Setiembre", telf: "" },
+            { dni: "", ape: "SAAVEDRA CASAS", nom: "Isabel Leszaida", cargo: "Dirigente Colectivo Generación Z", telf: "" },
+            { dni: "", ape: "ZELADA RABANAL", nom: "César Alejandro", cargo: "Presidente MSTP", telf: "" },
+            { dni: "", ape: "MIRANDA CASTRO", nom: "Felipe", cargo: "Dirigente Transportistas Cono Sur", telf: "" },
+            { dni: "", ape: "QUISPE MANDUJANO", nom: "Mario", cargo: "Fundador Mario Prensa del Pueblo", telf: "" },
+            { dni: "", ape: "VALDERRAMA CAMPOS", nom: "Andrea Lía", cargo: "Coord. Bloque Lima Popular / Vocera FRD", telf: "" },
+            { dni: "", ape: "HUAMANI QUISPE", nom: "Edward", cargo: "Dirigente Colectivo Rímac Llacta", telf: "" },
+            { dni: "07608964", ape: "ALTAMIRANO ZUÑIGA", nom: "German", cargo: "Rep. CNUL Base Apurímac", telf: "" },
+            { dni: "", ape: "HUILCA FLORES", nom: "Indira", cargo: "Activista / Excongresista", telf: "" },
+            { dni: "", ape: "MARIN RIVERA", nom: "Janet Patricia", cargo: "Abogada / Dirigente JP", telf: "" },
+            { dni: "", ape: "FLORES MENDOZA", nom: "María Elizabeth", cargo: "Activista RRSS (Convocante)", telf: "" },
+            { dni: "41970845", ape: "MAMANI CCOLLANA", nom: "Serly", cargo: "Docente / Abogada / Activista Puno", telf: "" },
+            { dni: "73498862", ape: "CASTILLO SILVA", nom: "José David", cargo: "Presidente FUSM (San Marcos)", telf: "" },
+            { dni: "75074397", ape: "RODRIGUEZ VILLA", nom: "Samuel", cargo: "Activista Generación Z", telf: "" },
+            { dni: "10069748", ape: "FLORES MENDOZA", nom: "María Elizabeth", cargo: "Activista Generación Z", telf: "" },
+            { dni: "", ape: "ODIAS ERAZO", nom: "Lilia Doris", cargo: "Pres. Asoc. Aportantes AFP", telf: "" },
+            { dni: "72481390", ape: "LOZANO GUERRA", nom: "Wildalr Gabriel", cargo: "Vocero Generación Z", telf: "" },
+            { dni: "43063007", ape: "OTTIVO CAMPOS", nom: "Luis Felipe", cargo: "Activista SJL", telf: "" },
+            { dni: "76649573", ape: "SAMILLAN SANGA", nom: "Milagros Shantal", cargo: "Asoc. Mártires 09 Enero Juliaca", telf: "" }
+        ];
+
+        // 3. RENDERIZADO
+        const grid = document.getElementById('grid');
+        const modal = document.getElementById('modal');
+
+        function handleSearch() {
+            const q = document.getElementById('searchInput').value.toUpperCase().trim();
+            grid.innerHTML = '';
+
+            if (q.length < 2) {
+                grid.innerHTML = `<div class="no-res"><i class="fas fa-search" style="font-size:3rem; margin-bottom:15px;"></i><p>Ingrese al menos 2 caracteres...</p></div>`;
+                return;
+            }
+
+            const results = db.filter(p => {
+                const enDni = p.dni && p.dni.includes(q);
+                const enApe = p.ape && p.ape.toUpperCase().includes(q);
+                const enNom = p.nom && p.nom.toUpperCase().includes(q);
+                const enCargo = p.cargo && p.cargo.toUpperCase().includes(q);
+                return enDni || enApe || enNom || enCargo;
+            });
+
+            if (results.length === 0) {
+                grid.innerHTML = `<div class="no-res"><p>No se encontraron registros.</p></div>`;
+                return;
+            }
+
+            results.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                const safeJson = JSON.stringify(p).replace(/"/g, '&quot;');
+                const imgSrc = p.dni ? `imagenes/${p.dni}.jpg` : 'imagenes/persona.jpg';
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span>PERSONAL EXTERNO</span>
+                        <span>ACTIVO</span>
+                    </div>
+                    <div class="card-body">
+                        <img src="${imgSrc}" class="card-img" onerror="this.src='imagenes/persona.jpg'">
+                        <div class="card-info">
+                            <div class="card-name">${p.ape}, ${p.nom}</div>
+                            <div class="card-role">${p.cargo.substring(0, 30)}...</div>
+                            <div class="card-dni">ID: ${p.dni || 'S/D'}</div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="view-btn" onclick="openModal(${safeJson})">VER FICHA</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 4. FUNCIÓN SEGURA
+        function setSafe(id, val) {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val || "---";
+        }
+
+        function openModal(p) {
+            const imgPath = p.dni ? `imagenes/${p.dni}.jpg` : 'imagenes/persona.jpg';
+            const imgEl = document.getElementById('mImg');
+            if(imgEl) {
+                imgEl.src = imgPath;
+                imgEl.onerror = function() { this.src = 'imagenes/persona.jpg'; };
+            }
+
+            // Asignación de datos
+            setSafe('mName', `${p.ape}, ${p.nom}`);
+            setSafe('mRole', p.cargo);
+            setSafe('mDni', p.dni);
+            setSafe('mApe', p.ape);
+            setSafe('mNom', p.nom);
+            
+            // CAMPOS RESTAURADOS
+            setSafe('mFecNac', p.fecha_nac);
+            setSafe('mUbiNac', p.ubigeo_nac);
+            setSafe('mUbiDir', p.ubigeo_dir);
+            setSafe('mDir', p.direccion);
+            setSafe('mSex', p.sexo);
+            setSafe('mEstCiv', p.est_civil);
+            setSafe('mRuc', p.ruc);
+            setSafe('mPadre', p.padre);
+            setSafe('mMadre', p.madre);
+            setSafe('mTelf', p.telf);
+            setSafe('mObs', p.obs);
+
+            // Redes Sociales Dinámicas
+            const socialBox = document.getElementById('modalSocialLinks');
+            if(socialBox) {
+                socialBox.innerHTML = ''; 
+                
+                if (p.links && p.links.length > 0) {
+                    p.links.forEach(link => {
+                        let icon = 'fas fa-globe';
+                        let label = 'Web';
+                        const l = link.toLowerCase();
+                        if (l.includes('facebook')) { icon = 'fab fa-facebook'; label = 'Facebook'; }
+                        else if (l.includes('twitter') || l.includes('x.com')) { icon = 'fab fa-twitter'; label = 'Twitter'; }
+                        else if (l.includes('instagram')) { icon = 'fab fa-instagram'; label = 'Instagram'; }
+                        else if (l.includes('tiktok')) { icon = 'fab fa-tiktok'; label = 'TikTok'; }
+                        
+                        const a = document.createElement('a');
+                        a.href = link;
+                        a.target = '_blank';
+                        a.className = 'social-btn';
+                        a.innerHTML = `<i class="${icon}"></i> ${label}`;
+                        socialBox.appendChild(a);
+                    });
+                } else {
+                    const placeholders = [
+                        {i: 'fab fa-facebook', l: 'Facebook'},
+                        {i: 'fab fa-twitter', l: 'Twitter'},
+                        {i: 'fab fa-tiktok', l: 'TikTok'},
+                        {i: 'fas fa-globe', l: 'Web'}
+                    ];
+                    placeholders.forEach(item => {
+                        const a = document.createElement('a');
+                        a.href = '#';
+                        a.className = 'social-btn';
+                        a.onclick = (e) => { e.preventDefault(); alert('Enlace no configurado para este perfil'); };
+                        a.innerHTML = `<i class="${item.i}"></i> ${item.l}`;
+                        socialBox.appendChild(a);
+                    });
+                }
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { modal.style.display = 'none'; }
+        window.onclick = function(e) { if (e.target == modal) closeModal(); }
+        document.onkeydown = function(e) { if(e.key === "Escape") closeModal(); }
+
+    </script>
+</body>
+</html>
